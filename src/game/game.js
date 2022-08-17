@@ -1,12 +1,16 @@
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 
+let clock = new THREE.Clock();
+let deltaTime = 0;
+
+let desiredFps = 60;
+let desiredDelta = 1000 / desiredFps;
+let timeTarget = 0;
+
 let renderer = null;
 
-let scene = null;
-let camera = null;
-
-let cube = null;
+let screens = new Stack();
 
 init();
 initRenderer();
@@ -23,40 +27,53 @@ function initRenderer() {
     renderer.setSize(WIDTH, HEIGHT);
     renderer.setClearColor(0xDDDDDD, 1);
     document.body.appendChild(renderer.domElement);
-
-    scene = new THREE.Scene();
-
-    camera = new THREE.PerspectiveCamera(70, WIDTH / HEIGHT);
-    camera.position.z = 50;
-    scene.add(camera);
 }
 
 function start(params) {
     console.log("GAME start");
 
-    const boxGeometry = new THREE.BoxGeometry(10, 10, 10);
-    const basicMaterial = new THREE.MeshBasicMaterial({ color: 0x0095DD });
-    cube = new THREE.Mesh(boxGeometry, basicMaterial);
-    scene.add(cube);
-    cube.rotation.set(0.4, 0.2, 0);
+    screens.push(new MenuScreen(WIDTH, HEIGHT));
+    screens.peek().start();
 
     render();
 }
 
 function tick(dt) {
-    //console.log("GAME tick");
+    if (!screens.isEmpty()) {
+        screens.peek().tick(dt);
+    }
 }
 
-function render(dt) {
-    tick();
+function render() {
+    if (Date.now()>=timeTarget) {
+        deltaTime = clock.getDelta();
+        //console.log(deltaTime);
 
-    //console.log("GAME render");
+        tick(deltaTime);
+        renderImage(deltaTime);
 
-    requestAnimationFrame(render); // begin, using V-sync
+        timeTarget += desiredDelta;
 
-    cube.rotation.x += 0.01;
+        if (Date.now()>= timeTarget) {
+            timeTarget = Date.now();
+        }
+    }
 
-    renderer.render(scene, camera); // end
+    requestAnimationFrame(render); // always request
+
+    if (screens.isEmpty()) {
+        stop();
+        exit();
+    }
+}
+
+function renderImage(dt) {
+    if (!screens.isEmpty()) {
+        const currentScreen = screens.peek();
+        
+        currentScreen.render(dt);
+        renderer.render(currentScreen.scene, currentScreen.camera); // actually rendering
+    }
 }
 
 function stop() {
