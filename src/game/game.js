@@ -1,3 +1,4 @@
+// variables
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 
@@ -10,16 +11,16 @@ let timeTarget = 0;
 
 let renderer = null;
 
-let screens = new Stack();
+let screens = null;
 
+// functions
 init();
-initRenderer();
-// load screen()
-// screen.loadmap()
 start();
 
 function init() {
     console.log("GAME initiated");
+
+    initRenderer();
 }
 
 function initRenderer() {
@@ -32,6 +33,7 @@ function initRenderer() {
 function start(params) {
     console.log("GAME start");
 
+    screens = new Stack();
     screens.push(new MenuScreen(WIDTH, HEIGHT));
     screens.peek().start();
 
@@ -45,16 +47,16 @@ function tick(dt) {
 }
 
 function render() {
-    if (Date.now()>=timeTarget) {
+    if (Date.now() >= timeTarget) {
         deltaTime = clock.getDelta();
         //console.log(deltaTime);
 
         tick(deltaTime);
-        renderImage(deltaTime);
+        renderScreen(deltaTime);
 
         timeTarget += desiredDelta;
 
-        if (Date.now()>= timeTarget) {
+        if (Date.now() >= timeTarget) {
             timeTarget = Date.now();
         }
     }
@@ -67,10 +69,10 @@ function render() {
     }
 }
 
-function renderImage(dt) {
+function renderScreen(dt) {
     if (!screens.isEmpty()) {
         const currentScreen = screens.peek();
-        
+
         currentScreen.render(dt);
         renderer.render(currentScreen.scene, currentScreen.camera); // actually rendering
     }
